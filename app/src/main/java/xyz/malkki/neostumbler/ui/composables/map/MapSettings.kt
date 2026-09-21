@@ -45,19 +45,20 @@ import xyz.malkki.neostumbler.ui.composables.shared.Dialog
 import xyz.malkki.neostumbler.ui.map.MapThemeOverride
 import xyz.malkki.neostumbler.ui.map.MapTileSource
 
-private data class MapDialogSettings(
+private data class MapStyleSettings(
     val tileSource: MapTileSource,
     val styleUrl: String,
     val themeOverride: MapThemeOverride,
 )
 
-private fun Settings.mapDialogSettings(): Flow<MapDialogSettings> =
+private fun Settings.mapStyleSettings(): Flow<MapStyleSettings> =
     getSnapshotFlow().map { prefs ->
         val tileSource = prefs.getEnum(PreferenceKeys.MAP_TILE_SOURCE) ?: MapTileSource.DEFAULT
         val styleUrl = prefs.getString(PreferenceKeys.MAP_TILE_SOURCE_CUSTOM_URL) ?: ""
-        val themeOverride = prefs.getEnum(PreferenceKeys.MAP_THEME_OVERRIDE) ?: MapThemeOverride.SYSTEM
+        val themeOverride =
+            prefs.getEnum(PreferenceKeys.MAP_THEME_OVERRIDE) ?: MapThemeOverride.SYSTEM
 
-        MapDialogSettings(tileSource, styleUrl, themeOverride)
+        MapStyleSettings(tileSource, styleUrl, themeOverride)
     }
 
 @Composable
@@ -67,7 +68,7 @@ fun MapSettingsButton(modifier: Modifier, settings: Settings = koinInject()) {
     var dialogOpen by rememberSaveable { mutableStateOf(false) }
 
     val currentDialogSettings by
-        settings.mapDialogSettings().collectAsStateWithLifecycle(initialValue = null)
+        settings.mapStyleSettings().collectAsStateWithLifecycle(initialValue = null)
 
     if (dialogOpen) {
         val dialogSettings = currentDialogSettings
@@ -84,7 +85,10 @@ fun MapSettingsButton(modifier: Modifier, settings: Settings = koinInject()) {
                                     PreferenceKeys.MAP_TILE_SOURCE_CUSTOM_URL,
                                     newSettings.styleUrl,
                                 )
-                                setEnum(PreferenceKeys.MAP_THEME_OVERRIDE, newSettings.themeOverride)
+                                setEnum(
+                                    PreferenceKeys.MAP_THEME_OVERRIDE,
+                                    newSettings.themeOverride,
+                                )
                             }
                         }
                     }
@@ -111,8 +115,8 @@ fun MapSettingsButton(modifier: Modifier, settings: Settings = koinInject()) {
 
 @Composable
 private fun MapSettingsDialog(
-    currentSettings: MapDialogSettings,
-    onCloseDialog: (MapDialogSettings?) -> Unit,
+    currentSettings: MapStyleSettings,
+    onCloseDialog: (MapStyleSettings?) -> Unit,
 ) {
     val selectedTileSource = rememberSaveable { mutableStateOf(currentSettings.tileSource) }
     val selectedStyleUrl = rememberSaveable { mutableStateOf<String?>(currentSettings.styleUrl) }
@@ -124,7 +128,7 @@ private fun MapSettingsDialog(
         title = stringResource(id = R.string.map_tile_source),
         onDismissRequest = {
             onCloseDialog(
-                MapDialogSettings(
+                MapStyleSettings(
                     tileSource = selectedTileSource.value,
                     styleUrl = selectedStyleUrl.value!!,
                     themeOverride = selectedThemeOverride.value,
